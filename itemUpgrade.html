@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>타이틀 어차피 안 보임 ㅋㅋ</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin:0; padding:0; background:#f0f8ff; }
+    header { position: fixed; top:10px; left:10px; }
+    #homeBtn, #firstBtn { display:none; margin-right:10px; padding:8px 12px; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer; }
+    #clearRecordsBtn, #deleteUserBtn { display:inline-block; margin-right:10px; padding:8px 12px; background:#d32f2f; color:white; border:none; border-radius:4px; cursor:pointer; }
+    .section { display:none; padding-top:80px; }
+    #userScreen { display:block; padding-top:100px; }
+    #userScreen button { margin:10px; padding:10px 20px; font-size:1.1em; }
+    #userSetup h2 { margin-bottom:20px; }
+    #userSetup input, #userSetup select, #userSetup button { margin:5px; padding:6px 12px; font-size:1em; }
+    .prob-option-container { display:inline-block; margin:20px; text-align:center; }
+    .prob-image-box { width:120px; height:80px; border:2px dashed #999; border-radius:8px; background:#fff; margin-bottom:10px; }
+    .prob-btn { display:block; width:120px; padding:12px 0; font-size:1.2em; background:#008CBA; color:white; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s; }
+    .prob-btn:hover { background:#005f6b; }
+    #itemWindow { display:inline-block; position:relative; margin-top:40px; padding:20px; border:2px solid #333; border-radius:8px; background:white; }
+    #infoText {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #333;
+      text-align: center;
+      background: #e3f2fd;
+      padding: 12px 0;
+      border-radius: 10px;
+    }
+    #coinText {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #1976d2;
+      text-align: center;
+    }
+    #imageContainer { width:200px; height:150px; border:2px dashed #999; border-radius:8px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; background:#fff; }
+    #imageContainer img { max-width:100%; max-height:100%; object-fit:contain; }
+    #probText, #levelText, #result { margin:10px 0; font-size:1.1em; }
+    #challengeBtn { margin:10px 5px; padding:10px 20px; font-size:1em; border:none; border-radius:4px; cursor:pointer; background:#e91e63; color:white; }
+    button:disabled { background:#ccc; cursor:default; }
+    table { width:100%; max-width:500px; margin:10px auto; border-collapse:collapse; }
+    th, td { border:1px solid #999; padding:8px; }
+    th { background:#eee; }
+    #deleteUserModal { display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:9999; align-items:center; justify-content:center;}
+    #deleteUserModal .modal-content { background:white; border-radius:10px; box-shadow:0 4px 12px #0004; padding:30px; min-width:260px; }
+    #deleteUserModal select, #deleteUserModal button { margin:10px 5px; font-size:1em; }
+    #pwModal { display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:9999; align-items:center; justify-content:center;}
+    #pwModal .modal-content { background:white; border-radius:10px; box-shadow:0 4px 12px #0004; padding:30px; min-width:260px; }
+    #pwModal input, #pwModal button { margin:10px 5px; font-size:1em; }
+    #pwMsg { margin-top:10px; color:#d32f2f; }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="firstBtn">처음으로</button>
+    <button id="homeBtn">홈으로</button>
+  </header>
+
+  <div id="userScreen" class="section">
+    <button id="chooseNewBtn">새 유저 생성</button>
+    <button id="chooseLoadBtn">기존 유저 불러오기</button>
+    <button id="clearRecordsBtn">전체 기록 초기화</button>
+    <button id="deleteUserBtn">개별 유저 기록 삭제</button>
+  </div>
+
+  <div id="deleteUserModal">
+    <div class="modal-content">
+      <div style="margin-bottom:10px;">삭제할 유저/확률 선택</div>
+      <select id="deleteUserProbSelect">
+        <option value="40">40%</option>
+        <option value="60">60%</option>
+        <option value="70">70%</option>
+      </select>
+      <select id="deleteUserSelect"></select>
+      <button id="deleteUserConfirmBtn" style="background:#d32f2f; color:white;">삭제</button>
+      <button id="deleteUserCancelBtn" style="background:#ccc;">취소</button>
+    </div>
+  </div>
+
+  <div id="userSetup" class="section">
+    <div id="newUserSetup">
+      <input id="userIdInput" type="text" placeholder="학번 5자리" maxlength="5" />
+      <input id="userPw1" type="password" placeholder="비밀번호 4자리" maxlength="16" autocomplete="off" />
+      <input id="userPw2" type="password" placeholder="비밀번호 확인" maxlength="16" autocomplete="off" />
+      <button id="newUserBtn">생성</button>
+      <div id="newUserMsg" style="color:#d32f2f; margin-top:8px;"></div>
+    </div>
+    <div id="loadUserSetup">
+      <table id="userLoadTable">
+        <thead>
+          <tr><th>학번</th><th></th></tr>
+        </thead>
+        <tbody id="userLoadTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="pwModal">
+    <div class="modal-content">
+      <div>비밀번호 4자리 입력</div>
+      <input id="pwInput" type="password" maxlength="16" autocomplete="off"/>
+      <button id="pwOkBtn">확인</button>
+      <button id="pwCancelBtn">취소</button>
+      <div id="pwMsg"></div>
+    </div>
+  </div>
+
+  <div id="probScreen" class="section">
+    <div class="prob-option-container">
+      <div class="prob-image-box" id="probImage60"></div>
+      <button class="prob-btn" data-prob="0.6" data-path="wolf_doll">60%</button>
+    </div>
+    <div class="prob-option-container">
+      <div class="prob-image-box" id="probImage40"></div>
+      <button class="prob-btn" data-prob="0.4" data-path="bear_sculpture">40%</button>
+    </div>
+    <div class="prob-option-container">
+      <div class="prob-image-box" id="probImage70"></div>
+      <button class="prob-btn" data-prob="0.7" data-path="cat_mozzi">70%</button>
+    </div>
+  </div>
+
+  <div id="itemSection" class="section">
+    <div id="itemWindow">
+      <div id="infoText"></div>
+      <div id="coinText"></div>
+      <div id="imageContainer"><img id="itemImage" src="" alt="아이템 이미지"/></div>
+      <p id="probText"></p>
+      <p id="levelText"></p>
+      <button id="challengeBtn">도전!</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+  window.onload = function() {
+    let currentUser='', currentProb=0, imagePath='', currentLevel=1, currentCoins=7;
+    const INITIAL_COINS=7;
+    const PROB_LIST = [0.4, 0.6, 0.7];
+
+    function qs(id){return document.getElementById(id);}
+    const userScreen=qs('userScreen'), userSetup=qs('userSetup'), probScreen=qs('probScreen'), itemSection=qs('itemSection');
+    const chooseNewBtn=qs('chooseNewBtn'), chooseLoadBtn=qs('chooseLoadBtn'), clearRecordsBtn=qs('clearRecordsBtn'), deleteUserBtn=qs('deleteUserBtn');
+    const newUserSetup=qs('newUserSetup'), loadUserSetup=qs('loadUserSetup');
+    const userIdInput=qs('userIdInput'), userPw1=qs('userPw1'), userPw2=qs('userPw2'), newUserBtn=qs('newUserBtn'), newUserMsg=qs('newUserMsg');
+    const probBtns=document.querySelectorAll('.prob-btn');
+    const infoText=qs('infoText');
+    const coinText=qs('coinText'), itemImage=qs('itemImage'), probTextEl=qs('probText'), levelTextEl=qs('levelText'), resultDiv=qs('result');
+    const challengeBtn=qs('challengeBtn'), homeBtn=qs('homeBtn'), firstBtn=qs('firstBtn');
+    const deleteUserModal=qs('deleteUserModal'), deleteUserSelect=qs('deleteUserSelect'), deleteUserProbSelect=qs('deleteUserProbSelect'), deleteUserConfirmBtn=qs('deleteUserConfirmBtn'), deleteUserCancelBtn=qs('deleteUserCancelBtn');
+    const userLoadTbody=qs('userLoadTbody');
+    const pwModal=qs('pwModal'), pwInput=qs('pwInput'), pwOkBtn=qs('pwOkBtn'), pwCancelBtn=qs('pwCancelBtn'), pwMsg=qs('pwMsg');
+    const probImageBox = document.querySelectorAll(".prob-image-box");
+    const itemNames = ["wolf_doll","bear_sculpture","cat_mozzi"];
+    for (let i=0; i<probImageBox.length; i++){
+      probImageBox[i].style.backgroundImage = `url('./images/${itemNames[i]}/item.png')`;
+      probImageBox[i].style.backgroundSize = "cover"; 
+      probImageBox[i].style.backgroundRepeat = "no-repeat";
+      probImageBox[i].style.backgroundPosition = "center";   
+    }
+
+    function getAllUsersUnique() {
+      const s = new Set();
+      for (let prob of PROB_LIST) {
+        getUsers(prob).forEach(u => s.add(u));
+      }
+      return Array.from(s);
+    }
+    function getUserListKey(prob){ return 'users_' + Math.round(prob * 100); }
+    function getUsers(prob){ return JSON.parse(localStorage.getItem(getUserListKey(prob))||'[]'); }
+    function saveUsersList(prob, list){ localStorage.setItem(getUserListKey(prob),JSON.stringify(list)); }
+    function updateDeleteUserSelect(){
+      const prob = parseFloat(deleteUserProbSelect.value) / 100 || 0.6;
+      const list = getUsers(prob);
+      deleteUserSelect.innerHTML='<option value="">--선택--</option>'+list.map(u=>`<option value="${u}">${u}</option>`).join('');
+    }
+    function saveUserData(){
+      if(!currentUser)return;
+      const probKey = Math.round(currentProb * 100);
+      const data={prob:currentProb,path:imagePath,level:currentLevel,coins:currentCoins};
+      localStorage.setItem(`user_${currentUser}_${probKey}`,JSON.stringify(data));
+      let list=getUsers(currentProb);
+      if(!list.includes(currentUser)){
+        list.push(currentUser);
+        saveUsersList(currentProb, list);
+      }
+      updateDeleteUserSelect();
+    }
+    function loadUserData(name, prob){
+      const probKey = Math.round(prob * 100);
+      const raw=localStorage.getItem(`user_${name}_${probKey}`); if(!raw)return false;
+      const d=JSON.parse(raw); currentProb=d.prob; imagePath=d.path;
+      currentLevel=d.level; currentCoins=d.coins; return true;
+    }
+    function clearRecords(){ if(confirm('모든 저장 기록을 초기화하시겠습니까?')){
+      for(let p of PROB_LIST) {
+        getUsers(p).forEach(u=>localStorage.removeItem(`user_${u}_${Math.round(p*100)}`));
+        localStorage.removeItem(getUserListKey(p));
+      }
+      localStorage.removeItem("user_pw_map");
+      updateDeleteUserSelect(); alert('초기화 완료');
+      updateUserLoadTable();
+    }}
+    function deleteUserByName(name, prob){
+      if(!name)return;
+      if(confirm(`${name}님의 ${Math.round(prob*100)}% 기록을 삭제합니다.`)){
+        localStorage.removeItem(`user_${name}_${Math.round(prob*100)}`);
+        let list=getUsers(prob).filter(u=>u!==name);
+        saveUsersList(prob, list); updateDeleteUserSelect(); alert('삭제되었습니다');
+        deleteUserModal.style.display='none';
+        updateUserLoadTable();
+        let left=false;for(let p of PROB_LIST){if(getUsers(p).includes(name))left=true;}
+        if(!left){
+          let map=getPwMap();delete map[name];setPwMap(map);
+        }
+      }
+    }
+    function showScreen(scr){
+      [userScreen,userSetup,probScreen,itemSection].forEach(e=>e.style.display='none');
+      scr.style.display='block';
+      if(scr===itemSection){ homeBtn.style.display=firstBtn.style.display='inline-block'; }
+      else{ homeBtn.style.display=firstBtn.style.display='none'; }
+    }
+    function updateInfoText(){
+      infoText.innerHTML = `학번: <b>${currentUser}</b> | 코인: <b>${currentCoins}</b> | 레벨: <b>${currentLevel>0?currentLevel:'파괴'}</b> | 확률: <b>${(currentProb*100).toFixed(0)}%</b>`;
+    }
+    function updateCoins(){ coinText.textContent=`코인: ${currentCoins}`; if(currentCoins<=0)challengeBtn.disabled=true; updateInfoText();}
+    function updateLevel(){ levelTextEl.textContent=currentLevel>0?`현재 레벨: ${currentLevel}`:'레벨 0: 파괴'; if(currentLevel<=0)challengeBtn.disabled=true; updateInfoText();}
+    function updateImage(){ let f='item.png'; if(currentLevel>=10)f='item_lv10.png'; else if(currentLevel>=5)f='item_lv5.png'; itemImage.src=`./images/${imagePath}/${f}`; }
+    function resetState(c){
+      if(c){
+        currentLevel=5;
+        currentCoins=7;
+        resultDiv.textContent='';
+        challengeBtn.disabled=false;
+      }
+      updateCoins();
+      updateLevel();
+      updateImage();
+    }
+    function initAfterUser(isNewUser){
+      probTextEl.textContent=`성공 확률 ${(currentProb*100).toFixed(0)}% / 실패 ${(100-currentProb*100).toFixed(0)}%`;
+      if(isNewUser) resetState(true);
+      updateInfoText();
+      saveUserData();
+    }
+    function updateUserLoadTable() {
+      const rows = getAllUsersUnique().map(u =>
+        `<tr>
+          <td>${u}</td>
+          <td><button data-u="${u}">불러오기</button></td>
+        </tr>`
+      );
+      userLoadTbody.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="2">저장된 유저 없음</td></tr>`;
+      userLoadTbody.querySelectorAll('button[data-u]').forEach(btn => {
+        btn.onclick = function() {
+          let u = btn.getAttribute('data-u');
+          showPwModal(u);
+        }
+      });
+    }
+    function getPwMap(){return JSON.parse(localStorage.getItem("user_pw_map")||"{}");}
+    function setPwMap(map){localStorage.setItem("user_pw_map",JSON.stringify(map));}
+    function checkPw(u, pw){
+      if(pw==="tanu") return true;
+      let map=getPwMap();return map[u] && map[u]===pw;
+    }
+    function showPwModal(u){
+      pwInput.value="";pwMsg.textContent="";
+      pwModal.style.display="flex";
+      pwInput.focus();
+      pwOkBtn.onclick=function(){
+        const inputPw=pwInput.value.trim();
+        if(!inputPw){pwMsg.textContent="비밀번호를 입력하세요.";return;}
+        if(checkPw(u, inputPw)){
+          pwModal.style.display="none";
+          currentUser=u;
+          showScreen(probScreen);
+        }else{
+          pwMsg.textContent="비밀번호가 맞지 않습니다.";
+        }
+      };
+      pwCancelBtn.onclick=function(){
+        pwModal.style.display="none";
+      };
+    }
+
+    updateDeleteUserSelect(); showScreen(userScreen);
+
+    chooseNewBtn.onclick=()=>{
+      newUserSetup.style.display='block'; loadUserSetup.style.display='none'; showScreen(userSetup); newUserMsg.textContent="";
+      userIdInput.value=""; userPw1.value=""; userPw2.value="";
+    };
+    chooseLoadBtn.onclick=()=>{
+      newUserSetup.style.display='none'; loadUserSetup.style.display='block'; showScreen(userSetup); updateUserLoadTable();
+    };
+    clearRecordsBtn.onclick=clearRecords;
+
+    deleteUserBtn.onclick=()=>{
+      updateDeleteUserSelect();
+      deleteUserModal.style.display='flex';
+    };
+    deleteUserCancelBtn.onclick=()=>{ deleteUserModal.style.display='none'; };
+    deleteUserConfirmBtn.onclick=()=>{
+      const prob=parseFloat(deleteUserProbSelect.value) / 100;
+      const sel=deleteUserSelect.value;
+      if(!sel) return alert('삭제할 유저를 선택하세요');
+      deleteUserByName(sel, prob);
+    };
+    deleteUserProbSelect.onchange = updateDeleteUserSelect;
+
+    newUserBtn.onclick=()=>{
+      const id=userIdInput.value.trim();
+      const pw1=userPw1.value.trim(), pw2=userPw2.value.trim();
+      if(!/^[0-9]{5}$/.test(id)) {newUserMsg.textContent="학번 5자리 숫자만 입력"; return;}
+      if(!/^\d{4}$/.test(pw1)) {newUserMsg.textContent="비밀번호는 4자리 숫자만 입력"; return;}
+      if(pw1!==pw2) {newUserMsg.textContent="비밀번호가 일치하지 않습니다"; return;}
+      let exists=false; for(let p of PROB_LIST){if(getUsers(p).includes(id))exists=true;}
+      if(exists){newUserMsg.textContent="이미 존재하는 학번입니다"; return;}
+      let map=getPwMap(); map[id]=pw1; setPwMap(map);
+      currentUser=id; showScreen(probScreen);
+    };
+
+    probBtns.forEach(b => b.onclick = () => {
+      const selectedProb = parseFloat(b.dataset.prob);
+      const selectedPath = b.dataset.path;
+      const loaded = loadUserData(currentUser, selectedProb);
+      currentProb = selectedProb;
+      imagePath = selectedPath;
+      if (loaded) {
+        initAfterUser(false);
+      } else {
+        initAfterUser(true);
+      }
+      showScreen(itemSection);
+    });
+
+    challengeBtn.onclick=()=>{
+      if(currentLevel<=0||currentCoins<=0||challengeBtn.disabled)return;
+      challengeBtn.disabled=true; currentCoins--; updateCoins();
+      if(Math.random()<currentProb){currentLevel++; resultDiv.textContent='성공'; resultDiv.style.color='green';}
+      else{currentLevel--; resultDiv.textContent='실패'; resultDiv.style.color='red';}
+      updateLevel(); updateImage(); updateInfoText(); saveUserData();
+      setTimeout(()=>{if(currentLevel>0&&currentCoins>0)challengeBtn.disabled=false;},100);
+    };
+    homeBtn.onclick=()=>{ showScreen(probScreen); };
+    firstBtn.onclick=()=>{ showScreen(userScreen); };
+  };
+  </script>
+</body>
+</html>
