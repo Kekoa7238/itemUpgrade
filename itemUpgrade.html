@@ -140,6 +140,7 @@
     let currentUser='', currentProb=0, imagePath='', currentLevel=1, currentCoins=7;
     const INITIAL_COINS=7;
     const PROB_LIST = [0.4, 0.6, 0.7];
+    const itemNames = ["wolf_doll","bear_sculpture","cat_mozzi"];
 
     function qs(id){return document.getElementById(id);}
     const userScreen=qs('userScreen'), userSetup=qs('userSetup'), probScreen=qs('probScreen'), itemSection=qs('itemSection');
@@ -154,12 +155,15 @@
     const userLoadTbody=qs('userLoadTbody');
     const pwModal=qs('pwModal'), pwInput=qs('pwInput'), pwOkBtn=qs('pwOkBtn'), pwCancelBtn=qs('pwCancelBtn'), pwMsg=qs('pwMsg');
     const probImageBox = document.querySelectorAll(".prob-image-box");
-    const itemNames = ["wolf_doll","bear_sculpture","cat_mozzi"];
+    
     for (let i=0; i<probImageBox.length; i++){
       probImageBox[i].style.backgroundImage = `url('./images/${itemNames[i]}/item.png')`;
       probImageBox[i].style.backgroundSize = "cover"; 
       probImageBox[i].style.backgroundRepeat = "no-repeat";
       probImageBox[i].style.backgroundPosition = "center";   
+    }
+    for (let i=0; i<probBtns.length; i++){
+      probBtns[i].addEventListener("click" , ()=>{updateUI(i)});
     }
 
     function getAllUsersUnique() {
@@ -227,8 +231,8 @@
     function updateInfoText(){
       infoText.innerHTML = `학번: <b>${currentUser}</b> | 코인: <b>${currentCoins}</b> | 레벨: <b>${currentLevel>0?currentLevel:'파괴'}</b> | 확률: <b>${(currentProb*100).toFixed(0)}%</b>`;
     }
-    function updateCoins(){ coinText.textContent=`코인: ${currentCoins}`; if(currentCoins<=0)challengeBtn.disabled=true; updateInfoText();}
-    function updateLevel(){ levelTextEl.textContent=currentLevel>0?`현재 레벨: ${currentLevel}`:'레벨 0: 파괴'; if(currentLevel<=0)challengeBtn.disabled=true; updateInfoText();}
+    function updateCoins(){ coinText.textContent=`코인: ${currentCoins}`; updateInfoText();}
+    function updateLevel(){ levelTextEl.textContent=currentLevel>0?`현재 레벨: ${currentLevel}`:'레벨 0: 파괴'; updateInfoText();}
     function updateImage(){ let f='item.png'; if(currentLevel>=10)f='item_lv10.png'; else if(currentLevel>=5)f='item_lv5.png'; itemImage.src=`./images/${imagePath}/${f}`; }
     function resetState(c){
       if(c){
@@ -237,6 +241,13 @@
         resultDiv.textContent='';
         challengeBtn.disabled=false;
       }
+      updateCoins();
+      updateLevel();
+      updateImage();
+    }
+    function updateUI(i){
+      console.log("updateUI실행")
+      imagePath=itemNames[i];
       updateCoins();
       updateLevel();
       updateImage();
@@ -339,6 +350,7 @@
     });
 
     challengeBtn.onclick=()=>{
+      console.log(`challengeBtnClicked, ${currentLevel<=0} , ${currentCoins<=0} , ${challengeBtn.disabled}`)
       if(currentLevel<=0||currentCoins<=0||challengeBtn.disabled)return;
       challengeBtn.disabled=true; currentCoins--; updateCoins();
       if(Math.random()<currentProb){currentLevel++; resultDiv.textContent='성공'; resultDiv.style.color='green';}
